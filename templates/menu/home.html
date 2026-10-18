@@ -1,0 +1,121 @@
+{% extends "base.html" %}
+{% load static %}
+{% block content %}
+<section class="hero">
+  <div class="hero-copy"><p class="eyebrow">WELCOME TO C3</p><h1>Good Food<br><em>Brings People</em><br>Together</h1><p>Freshly prepared, crispy, delicious —<br>from our kitchen to your heart.</p><a class="button brush" href="#menu">Explore Our Menu <span>→</span></a></div>
+  <div class="hero-art">
+    <div class="hero-fries">🍟</div>
+    <div class="bucket"><div class="bucket-top"></div><div class="bucket-logo"><b>C<span>3</span></b><strong>FRIED CHICKEN</strong><small>Crispy • Crunchy • Chicken</small></div></div>
+    <div class="hero-chicken" aria-label="Crispy fried chicken food photo"></div>
+  </div>
+</section>
+<section class="menu-board-section" aria-label="C3 printed-style menu">
+  <div class="menu-board-heading">
+    <p class="eyebrow">C3 FRIED CHICKEN</p>
+    <h2>Explore Our <em>Menu Board</em></h2>
+    <p>Our signature favourites, drinks and extras — all in one place.</p>
+  </div>
+  <a class="menu-board-frame" href="{% static 'images/c3-menu-board.png' %}" target="_blank" rel="noopener" aria-label="Open the C3 menu board image in full size">
+    <img src="{% static 'images/c3-menu-board.png' %}" alt="C3 Fried Chicken menu board featuring broasted chicken, burgers, momos, juices, tea, coffee and extras with prices" loading="eager">
+    <span class="menu-board-zoom">↗ View full menu</span>
+  </a>
+</section>
+<section class="category-strip" aria-label="Menu categories">
+  {% for category in categories %}<a class="category-chip {% if selected_category == category.slug %}active{% endif %}" href="?category={{ category.slug }}#menu"><span>{{ category.icon }}</span><b>{{ category.name }}</b></a>{% endfor %}
+</section>
+<section class="menu-section" id="menu">
+  <div class="section-heading"><p class="eyebrow">FRESH INGREDIENTS · GREAT TASTE · ALWAYS</p><h2>Our Special <em>Menu</em></h2><p>Pick your favourite and order directly on WhatsApp.</p></div>
+  <form class="search-form" method="get" action="#menu">
+    {% if selected_category %}<input type="hidden" name="category" value="{{ selected_category }}">{% endif %}
+    <input type="search" name="q" value="{{ search_query }}" placeholder="Search menu..." aria-label="Search menu">
+    <button type="submit">Search</button>
+    {% if search_query or selected_category %}<a class="clear-filter" href="{% url 'home' %}#menu">Clear filters</a>{% endif %}
+  </form>
+  <div class="filter-row"><a class="{% if not selected_category %}selected{% endif %}" href="{% url 'home' %}#menu">All items</a>{% for category in categories %}<a class="{% if selected_category == category.slug %}selected{% endif %}" href="?category={{ category.slug }}#menu">{{ category.name }}</a>{% endfor %}</div>
+  <div class="menu-grid">
+    {% for item in items %}
+    <article class="menu-card">
+      <button type="button" class="menu-photo product-preview" aria-label="View {{ item.name }} details" data-name="{{ item.name }}" data-category="{{ item.category.name }}" data-description="{{ item.description }}" data-price="{% if item.price %}{{ item.display_price }}{% else %}Ask for price{% endif %}" data-whatsapp="{{ WHATSAPP_NUMBER }}">
+        {% if item.photo %}<img src="{{ item.photo }}" alt="{{ item.name }}" loading="lazy">{% else %}<div class="photo-fallback">{{ item.category.icon }}</div>{% endif %}
+        {% if item.featured %}<span class="popular">POPULAR</span>{% endif %}
+      </button>
+      <div class="menu-card-body"><div class="item-top"><span class="item-category">{{ item.category.name }}</span>{% if item.price %}<span class="price">{{ item.display_price }}</span>{% endif %}</div><h3><a href="{% url 'item_detail' item.slug %}">{{ item.name }}</a></h3><p>{{ item.description }}</p><div class="card-bottom"><span class="display-price">{% if item.price %}{{ item.display_price }}{% else %}Ask for price{% endif %}</span><a class="button order-button" target="_blank" rel="noopener" href="https://wa.me/{{ WHATSAPP_NUMBER }}?text=Hello%20C3%20Fried%20Chicken%2C%20I%20want%20to%20order%3A%20{{ item.name|urlencode }}">Order Now ↗</a></div></div>
+    </article>
+    {% empty %}
+    <div class="empty-state"><h3>No menu items found</h3><p>Try a different search or category.</p><a class="button" href="{% url 'home' %}#menu">Show full menu</a></div>
+    {% endfor %}
+  </div>
+</section>
+<section class="about-strip" id="about"><div><p class="eyebrow">WHY C3?</p><h2>Eat Good. <em>Feel Good.</em></h2><p>Great food, freshly prepared and served with care.</p></div><div class="about-points"><span>✦ Fresh Ingredients</span><span>✓ Hygienic Preparation</span><span>♡ Great Taste</span></div></section>
+<section class="contact-banner"><div><span class="contact-icon">☎</span><div><small>For Orders</small><a href="tel:{{ CAFE_PHONE }}">{{ CAFE_PHONE }}</a></div></div><a class="button whatsapp-button" target="_blank" rel="noopener" href="https://wa.me/{{ WHATSAPP_NUMBER }}?text=Hello%20C3%20Fried%20Chicken%2C%20I%20would%20like%20to%20order.">◉ Chat on WhatsApp</a></section>
+
+<div class="product-modal" id="productModal" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="productModalTitle">
+  <div class="product-modal-panel" role="document">
+    <button type="button" class="product-modal-close" aria-label="Close product details">×</button>
+    <div class="product-modal-image-wrap"><img id="productModalImage" src="" alt=""></div>
+    <div class="product-modal-info">
+      <span class="product-modal-category" id="productModalCategory"></span>
+      <h2 id="productModalTitle"></h2>
+      <p id="productModalDescription"></p>
+      <strong class="product-modal-price" id="productModalPrice"></strong>
+      <a id="productModalOrder" class="button order-button product-modal-order" href="#" target="_blank" rel="noopener">Order on WhatsApp ↗</a>
+    </div>
+  </div>
+</div>
+<script>
+(function () {
+  const modal = document.getElementById('productModal');
+  if (!modal) return;
+  // Keep the popup directly under <body> so transformed page sections cannot
+  // shift its fixed positioning away from the viewport center.
+  if (modal.parentElement !== document.body) document.body.appendChild(modal);
+  const panel = modal.querySelector('.product-modal-panel');
+  const closeButton = modal.querySelector('.product-modal-close');
+  const image = document.getElementById('productModalImage');
+  const title = document.getElementById('productModalTitle');
+  const category = document.getElementById('productModalCategory');
+  const description = document.getElementById('productModalDescription');
+  const price = document.getElementById('productModalPrice');
+  const order = document.getElementById('productModalOrder');
+  let previousFocus = null;
+
+  function openProduct(button) {
+    const cardImage = button.querySelector('img');
+    if (!cardImage) return;
+    previousFocus = document.activeElement;
+    image.src = cardImage.currentSrc || cardImage.src;
+    image.alt = button.dataset.name || '';
+    title.textContent = button.dataset.name || '';
+    category.textContent = button.dataset.category || '';
+    description.textContent = button.dataset.description || 'Freshly prepared at C3 Fried Chicken.';
+    price.textContent = button.dataset.price || 'Ask for price';
+    const itemName = button.dataset.name || '';
+    const number = button.dataset.whatsapp || '';
+    order.href = 'https://wa.me/' + number + '?text=' + encodeURIComponent('Hello C3 Fried Chicken, I want to order: ' + itemName);
+    modal.classList.add('is-open');
+    modal.setAttribute('aria-hidden', 'false');
+    document.body.classList.add('product-modal-open');
+    closeButton.focus();
+  }
+  function closeProduct() {
+    modal.classList.remove('is-open');
+    modal.setAttribute('aria-hidden', 'true');
+    document.body.classList.remove('product-modal-open');
+    image.src = '';
+    if (previousFocus && previousFocus.focus) previousFocus.focus();
+  }
+  document.querySelectorAll('.product-preview').forEach(function (button) {
+    button.addEventListener('click', function () { openProduct(button); });
+  });
+  closeButton.addEventListener('click', closeProduct);
+  modal.addEventListener('click', function (event) {
+    if (event.target === modal) closeProduct();
+  });
+  panel.addEventListener('click', function (event) { event.stopPropagation(); });
+  document.addEventListener('keydown', function (event) {
+    if (event.key === 'Escape' && modal.classList.contains('is-open')) closeProduct();
+  });
+})();
+</script>
+
+{% endblock %}

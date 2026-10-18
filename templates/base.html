@@ -1,0 +1,55 @@
+{% load static %}
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#101010">
+  <meta name="description" content="C3 Fried Chicken — crispy chicken, mandi, burgers, juices, momos and mojitos.">
+  <title>{% block title %}C3 Fried Chicken | Crispy • Crunchy • Chicken{% endblock %}</title>
+  <link rel="stylesheet" href="{% static 'css/site.css' %}">
+  <link rel="preconnect" href="https://images.unsplash.com">
+</head>
+<body class="site-loading">
+<div class="brand-splash" id="brandSplash" aria-label="C3 Fried Chicken loading">
+  <div class="splash-logo"><span>C<span>3</span></span></div>
+  <strong>C3 FRIED CHICKEN</strong>
+  <small>CRISPY · CRUNCHY · TASTY</small>
+</div>
+<div class="site-shell" id="siteShell">
+<header class="site-header">
+  <a class="brand" href="{% url 'home' %}" aria-label="C3 Fried Chicken home">
+    <span class="brand-mark">C<span>3</span></span>
+    <span class="brand-copy"><strong>FRIED CHICKEN</strong><small>{{ CAFE_TAGLINE }}</small></span>
+  </a>
+  <nav class="nav-links"><a href="{% url 'home' %}">Home</a><a href="{% url 'home' %}#menu">Menu</a><a href="{% url 'home' %}#about">About</a><a href="#contact">Contact</a></nav>
+  <div class="header-actions"><a class="phone-pill" href="tel:{{ CAFE_PHONE }}">☎ {{ CAFE_PHONE }}</a><a class="whatsapp-icon" aria-label="WhatsApp" target="_blank" rel="noopener" href="https://wa.me/{{ WHATSAPP_NUMBER }}">◉</a></div>
+</header>
+<main>{% block content %}{% endblock %}</main>
+<footer id="contact" class="footer">
+  <a class="brand footer-brand" href="{% url 'home' %}"><span class="brand-mark">C<span>3</span></span><span class="brand-copy"><strong>FRIED CHICKEN</strong><small>{{ CAFE_TAGLINE }}</small></span></a>
+  <div class="footer-order"><b>Order Now!</b><span>WhatsApp / Call</span><a href="tel:{{ CAFE_PHONE }}">{{ CAFE_PHONE }}</a></div>
+  <div class="footer-features"><span>✦ Fresh Ingredients</span><span>✓ Hygienic Preparation</span><span>♡ Great Taste</span></div>
+  <div class="copyright">© {% now "Y" %} C3 Fried Chicken. All rights reserved.</div>
+</footer>
+<a class="floating-wa" href="https://wa.me/{{ WHATSAPP_NUMBER }}?text=Hello%20C3%20Fried%20Chicken%2C%20I%20would%20like%20to%20order." target="_blank" rel="noopener" aria-label="Order on WhatsApp">WhatsApp Order</a>
+</div>
+<script>
+(function () {
+  const splash = document.getElementById('brandSplash');
+  const shell = document.getElementById('siteShell');
+  const reduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  function reveal() {
+    document.body.classList.remove('site-loading');
+    document.body.classList.add('site-ready');
+    if (splash) splash.setAttribute('aria-hidden', 'true');
+    if (shell) shell.removeAttribute('inert');
+    window.setTimeout(function () { if (splash) splash.remove(); }, 700);
+  }
+  if (shell) shell.setAttribute('inert', '');
+  if (reduced) reveal();
+  else window.setTimeout(reveal, 1750);
+})();
+</script>
+</body>
+</html>
